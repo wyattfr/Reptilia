@@ -41,11 +41,17 @@ fabricApi {
 }
 
 repositories {
-    // Add repositories to retrieve artifacts from in here.
-    // You should only use this when depending on other mods because
-    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-    // for more information about repositories.
+    maven {
+        name = "GeckoLib"
+        url = uri("https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/")
+        content {
+            includeGroup("software.bernie.geckolib")
+        }
+    }
+    maven {
+        name = "Terraformers"
+        url = uri( "https://maven.terraformersmc.com/")
+    }
 }
 
 dependencies {
@@ -54,31 +60,30 @@ dependencies {
     mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
     modImplementation("net.fabricmc:fabric-language-kotlin:${project.property("kotlin_loader_version")}")
-
+    modImplementation("software.bernie.geckolib:geckolib-fabric-${project.property("minecraft_version")}:${project.property("geckolib_version")}")
+    modImplementation("com.terraformersmc:modmenu:${project.property("modmenu_version")}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
 }
 
 tasks.processResources {
+    val props = mapOf(
+        "version" to project.version,
+        "minecraft_version" to project.property("minecraft_version"),
+        "loader_version" to project.property("loader_version"),
+        "kotlin_loader_version" to project.property("kotlin_loader_version")
+    )
+
     inputs.property("version", project.version)
     inputs.property("minecraft_version", project.property("minecraft_version"))
     inputs.property("loader_version", project.property("loader_version"))
     filteringCharset = "UTF-8"
 
     filesMatching("fabric.mod.json") {
-        expand(
-            "version" to project.version,
-            "minecraft_version" to project.property("minecraft_version"),
-            "loader_version" to project.property("loader_version"),
-            "kotlin_loader_version" to project.property("kotlin_loader_version")
-        )
+        expand(props)
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    // ensure that the encoding is set to UTF-8, no matter what the system default is
-    // this fixes some edge cases with special characters not displaying correctly
-    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-    // If Javadoc is generated, this must be specified in that task too.
     options.encoding = "UTF-8"
     options.release.set(targetJavaVersion)
 }
